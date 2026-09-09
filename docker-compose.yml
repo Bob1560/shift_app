@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ./docker/web
+    container_name: shift_web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - TZ=Asia/Tokyo
+    networks:
+      - shift_net
+
+  db:
+    image: mysql:8.0
+    container_name: shift_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: shift_db
+      MYSQL_USER: shift_user
+      MYSQL_PASSWORD: shift_pass
+      TZ: Asia/Tokyo
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shift_net
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: shift_phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: shift_user
+      PMA_PASSWORD: shift_pass
+      TZ: Asia/Tokyo
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - shift_net
+
+volumes:
+  db_data:
+
+networks:
+  shift_net:
+    driver: bridge
