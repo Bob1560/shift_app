@@ -1,0 +1,11 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /shift_app/
+
+    # アクセス先がすでに src/ で始まっている場合は書き換えを行わない（無限ループ防止）
+    RewriteCond %{REQUEST_URI} !^/shift_app/src/
+    RewriteBase /shift   
+
+    # すべてのアクセスを src/ 配下の同名ファイルへ内部転送
+    RewriteRule ^(.*)$ src/$1 [L]
+</IfModule>

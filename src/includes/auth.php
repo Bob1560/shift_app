@@ -4,6 +4,11 @@ require_once __DIR__ . '/Database.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
+
+function redirect(string $path): void {
+    header('Location: ' . BASE_PATH . $path);
+    exit;
+}
 }
 
 // ===== セッション・認証ユーティリティ =====
@@ -14,15 +19,13 @@ function isLoggedIn(): bool {
 
 function requireLogin(): void {
     if (!isLoggedIn()) {
-        header('Location: /auth/login.php');
-        exit;
+        redirect('/auth/login.php');
     }
     // セッションタイムアウトチェック（30分）
     if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
         session_unset();
         session_destroy();
-        header('Location: /auth/login.php?timeout=1');
-        exit;
+        redirect('/auth/login.php?timeout=1');
     }
     $_SESSION['last_activity'] = time();
 }
@@ -30,8 +33,7 @@ function requireLogin(): void {
 function requireAdmin(): void {
     requireLogin();
     if ($_SESSION['user_role'] !== 'admin') {
-        header('Location: /instructor/dashboard.php');
-        exit;
+        redirect('/instructor/dashboard.php');
     }
 }
 

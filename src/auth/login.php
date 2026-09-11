@@ -32,8 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // 2FA有効な場合は2FA確認画面へ
                 if ($user['totp_enabled']) {
                     $_SESSION['pre_2fa_user_id'] = $user['id'];
-                    header('Location: /auth/totp_verify.php');
-                    exit;
+                    redirect('/auth/totp_verify.php');
                 }
                 // ログイン完了
                 session_regenerate_id(true);
@@ -43,8 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['last_activity'] = time();
 
                 $redirect = $user['role'] === 'admin' ? '/admin/dashboard.php' : '/instructor/dashboard.php';
-                header('Location: ' . $redirect);
-                exit;
+                redirect($redirect);
             } else {
                 $errors[] = 'メールアドレスまたはパスワードが間違っています。';
                 // ブルートフォース対策の遅延
@@ -60,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ログイン | <?= h(APP_NAME) ?></title>
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/style.css">
 </head>
 <body>
 <div class="login-wrap">
@@ -78,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="alert alert-error"><?= h($e) ?></div>
         <?php endforeach; ?>
 
-        <form method="POST" action="/auth/login.php" novalidate>
+        <form method="POST" action="<?= BASE_PATH ?>/auth/login.php" novalidate>
             <?= csrfField() ?>
             <div class="form-group">
                 <label for="email">メールアドレス</label>
@@ -89,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="btn btn-primary btn-block mt-2">ログイン</button>
         </form>
         <div class="text-center mt-2">
-            <a href="/auth/forgot_password.php" style="font-size:0.85rem;color:#3182ce;">パスワードをお忘れですか？</a>
+            <a href="<?= BASE_PATH ?>/auth/forgot_password.php" style="font-size:0.85rem;color:#3182ce;">パスワードをお忘れですか？</a>
         </div>
     </div>
 </div>

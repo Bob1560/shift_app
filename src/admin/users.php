@@ -32,8 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
                 $db->prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)')
                    ->execute([$name, $email, $hash, $role]);
                 setFlash('success', 'ユーザー「' . $name . '」を追加しました。');
-                header('Location: /admin/users.php');
-                exit;
+                redirect('/admin/users.php');
             }
         }
     }
@@ -49,8 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'toggl
             $db->prepare('UPDATE users SET is_active = ? WHERE id = ?')->execute([$active, $uid]);
             setFlash('success', 'ユーザーの状態を変更しました。');
         }
-        header('Location: /admin/users.php');
-        exit;
+        redirect('/admin/users.php');
     }
 }
 
@@ -66,8 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
         } else {
             setFlash('error', 'パスワードは8文字以上が必要です。');
         }
-        header('Location: /admin/users.php');
-        exit;
+        redirect('/admin/users.php');
     }
 }
 
@@ -87,7 +84,7 @@ include __DIR__ . '/../includes/layout_header.php';
 <!-- 新規追加フォーム -->
 <div class="card">
     <h2 class="card-title">＋ ユーザーを追加</h2>
-    <form method="POST" action="/admin/users.php">
+    <form method="POST" action="<?= BASE_PATH ?>/admin/users.php">
         <?= csrfField() ?>
         <input type="hidden" name="action" value="add">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
@@ -193,7 +190,7 @@ include __DIR__ . '/../includes/layout_header.php';
 <div id="pw-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:8px;padding:2rem;width:100%;max-width:400px;margin:1rem;">
         <h3 style="margin-bottom:1rem;">パスワード変更</h3>
-        <form method="POST" action="/admin/users.php">
+        <form method="POST" action="<?= BASE_PATH ?>/admin/users.php">
             <?= csrfField() ?>
             <input type="hidden" name="action" value="reset_password">
             <input type="hidden" name="user_id" id="pw-user-id">

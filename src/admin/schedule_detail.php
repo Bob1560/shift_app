@@ -8,8 +8,7 @@ $errors = [];
 $scheduleId = (int)($_GET['id'] ?? 0);
 
 if (!$scheduleId) {
-    header('Location: /admin/schedules_calendar.php');
-    exit;
+    redirect('/admin/schedules_calendar.php');
 }
 
 // コマ情報取得
@@ -23,8 +22,7 @@ $stmt->execute([$scheduleId]);
 $schedule = $stmt->fetch();
 
 if (!$schedule) {
-    header('Location: /admin/schedules_calendar.php');
-    exit;
+    redirect('/admin/schedules_calendar.php');
 }
 
 // 割り当て済みの講師を取得
@@ -57,8 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'remov
         $assignmentId = (int)($_POST['assignment_id'] ?? 0);
         $db->prepare('DELETE FROM shift_assignments WHERE id = ?')->execute([$assignmentId]);
         setFlash('success', '講師の割り当てを削除しました。');
-        header('Location: /admin/schedule_detail.php?id=' . $scheduleId);
-        exit;
+        redirect('/admin/schedule_detail.php?id=' . $scheduleId);
     }
 }
 
@@ -74,8 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
         } else {
             $db->prepare('DELETE FROM schedules WHERE id = ?')->execute([$scheduleId]);
             setFlash('success', 'コマを削除しました。');
-            header('Location: /admin/schedules_calendar.php');
-            exit;
+            redirect('/admin/schedules_calendar.php');
         }
     }
 }
@@ -86,7 +82,7 @@ include __DIR__ . '/../includes/layout_header.php';
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
     <h1 class="page-title" style="margin:0;">📋 コマの詳細</h1>
-    <a href="/admin/schedules_calendar.php" class="btn btn-secondary">戻る</a>
+    <a href="<?= BASE_PATH ?>/admin/schedules_calendar.php" class="btn btn-secondary">戻る</a>
 </div>
 
 <?php if ($flash = getFlash()): ?>
@@ -202,7 +198,7 @@ include __DIR__ . '/../includes/layout_header.php';
                         </td>
                         <td><?= h(date('m/d H:i', strtotime($req['created_at']))) ?></td>
                         <td>
-                            <a href="/admin/shift_adjust.php?schedule_id=<?= h($scheduleId) ?>" class="btn btn-secondary btn-sm">詳細</a>
+                            <a href="<?= BASE_PATH ?>/admin/shift_adjust.php?schedule_id=<?= h($scheduleId) ?>" class="btn btn-secondary btn-sm">詳細</a>
                         </td>
                     </tr>
                     <?php endforeach; ?>

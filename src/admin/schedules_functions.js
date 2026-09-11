@@ -2,7 +2,7 @@ function submitAddForm(e) {
     e.preventDefault();
     const formData = new FormData(document.getElementById('addScheduleForm'));
     
-    fetch('/admin/schedules_api.php', {method: 'POST', body: formData})
+    fetch(BASE_PATH + '/admin/schedules_api.php', {method: 'POST', body: formData})
         .then(r => r.json())
         .then(data => {
             if (data.success) {
@@ -26,7 +26,7 @@ function deleteSchedule(scheduleId) {
     formData.append('action', 'delete');
     formData.append('schedule_id', scheduleId);
     
-    fetch('/admin/schedules_api.php', {method: 'POST', body: formData})
+    fetch(BASE_PATH + '/admin/schedules_api.php', {method: 'POST', body: formData})
         .then(r => r.json())
         .then(data => {
             if (data.success) {

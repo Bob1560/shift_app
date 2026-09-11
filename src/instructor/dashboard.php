@@ -69,7 +69,7 @@ include __DIR__ . '/../includes/layout_header.php';
     <div class="card">
         <div class="flex-between" style="margin-bottom:0.75rem;">
             <h2 class="card-title" style="margin:0;border:none;padding:0;">✅ 今後の確定シフト</h2>
-            <a href="/instructor/my_shifts.php" style="font-size:0.85rem;color:#3182ce;">すべて見る</a>
+            <a href="<?= BASE_PATH ?>/instructor/my_shifts.php" style="font-size:0.85rem;color:#3182ce;">すべて見る</a>
         </div>
         <?php if (empty($upcomingShifts)): ?>
             <p style="color:#718096;font-size:0.9rem;">確定しているシフトはありません。</p>
@@ -90,7 +90,7 @@ include __DIR__ . '/../includes/layout_header.php';
     <div class="card">
         <div class="flex-between" style="margin-bottom:0.75rem;">
             <h2 class="card-title" style="margin:0;border:none;padding:0;">⏳ 承認待ちの申請</h2>
-            <a href="/instructor/request.php" class="btn btn-primary btn-sm">新しく申請</a>
+            <a href="<?= BASE_PATH ?>/instructor/request.php" class="btn btn-primary btn-sm">新しく申請</a>
         </div>
         <?php if (empty($pendingRequests)): ?>
             <p style="color:#718096;font-size:0.9rem;">承認待ちの申請はありません。</p>

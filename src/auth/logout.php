@@ -5,5 +5,4 @@ require_once __DIR__ . '/../includes/auth.php';
 session_unset();
 session_destroy();
 
-header('Location: /auth/login.php?logout=1');
-exit;
+redirect('/auth/login.php?logout=1');

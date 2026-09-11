@@ -253,7 +253,7 @@ include __DIR__ . '/../includes/layout_header.php';
         <a href="?month=<?= h((clone $startDate)->modify('-1 month')->format('Y-m')) ?>" class="btn btn-secondary btn-sm">◀ 前月</a>
         <strong><?= h($startDate->format('Y年n月')) ?></strong>
         <a href="?month=<?= h($endDate->format('Y-m')) ?>" class="btn btn-secondary btn-sm">翌月 ▶</a>
-        <a href="/admin/schedules.php" class="btn btn-secondary btn-sm">リスト表示</a>
+        <a href="<?= BASE_PATH ?>/admin/schedules.php" class="btn btn-secondary btn-sm">リスト表示</a>
     </div>
 </div>
 
@@ -376,6 +376,7 @@ include __DIR__ . '/../includes/layout_header.php';
 </div>
 
 <script>
+const BASE_PATH = <?= json_encode(BASE_PATH) ?>;
 function openAddModal(dateStr) {
     document.getElementById('modalDate').value = dateStr;
     document.getElementById('addForm').reset();
@@ -396,7 +397,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     const formData = new FormData(document.getElementById('addForm'));
     
     try {
-        const response = await fetch('/admin/schedules_calendar.php', {
+        const response = await fetch(BASE_PATH + '/admin/schedules_calendar.php', {
             method: 'POST',
             body: formData
         });
@@ -418,7 +419,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
 
 function editSchedule(scheduleId, dateStr) {
     // 詳細ページへリダイレクト
-    window.location.href = '/admin/schedule_detail.php?id=' + scheduleId;
+    window.location.href = BASE_PATH + '/admin/schedule_detail.php?id=' + scheduleId;
 }
 
 window.addEventListener('click', (e) => {
