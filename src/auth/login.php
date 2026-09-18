@@ -5,8 +5,7 @@ require_once __DIR__ . '/../includes/auth.php';
 
 // すでにログイン済みならリダイレクト
 if (isLoggedIn()) {
-    header('Location: ' . (currentUserRole() === 'admin' ? '/admin/dashboard.php' : '/instructor/dashboard.php'));
-    exit;
+    redirect(currentUserRole() === 'admin' ? '/admin/dashboard.php' : '/instructor/dashboard.php');
 }
 
 $errors = [];

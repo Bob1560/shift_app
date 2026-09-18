@@ -4,11 +4,11 @@ require_once __DIR__ . '/Database.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
+}
 
 function redirect(string $path): void {
     header('Location: ' . BASE_PATH . $path);
     exit;
-}
 }
 
 // ===== セッション・認証ユーティリティ =====
