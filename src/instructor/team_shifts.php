@@ -148,11 +148,12 @@ include __DIR__ . '/../includes/layout_header.php';
 .loc-block-header { background: linear-gradient(135deg, #319795, #285e61); color: white; padding: 8px 12px; font-weight: bold; font-size: 0.88rem; }
 .loc-block-body { padding: 10px 12px; }
 
-/* 時間枠ブロック */
-.slot-block { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; }
-.slot-block:last-child { margin-bottom: 0; }
-.slot-time { font-weight: bold; color: #285e61; font-size: 0.85rem; margin-bottom: 6px; }
+/* 時間枠バッジ（横並び・簡略表示） */
+.slots-label { font-size: 0.72rem; font-weight: bold; color: #718096; margin-bottom: 5px; letter-spacing: 0.04em; }
 .slot-required { color: #718096; font-size: 0.75rem; font-weight: normal; margin-left: 6px; }
+.slot-list { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+.slot-badge { background: #e6fffa; color: #285e61; font-size: 0.78rem; font-weight: bold; padding: 3px 8px; border-radius: 4px; }
+
 .person-row { font-size: 0.82rem; margin-bottom: 3px; }
 .person-row .label { color: #718096; font-weight: bold; margin-right: 4px; }
 .person-list { color: #2d3748; }
@@ -248,30 +249,38 @@ function selectDate(dateStr, focusLoc) {
 
     Object.keys(byLoc).forEach(locName => {
         const locData = byLoc[locName];
-        let slotsHtml = '';
-        locData.slots
-            .slice().sort((a,b) => a.start.localeCompare(b.start))
-            .forEach(s => {
-                const assignedHtml = s.assigned.length
-                    ? '<span class="person-list">' + s.assigned.map(esc).join('、') + '</span>'
-                    : '<span class="person-empty">未確定</span>';
-                const pendingHtml = s.pending.length
-                    ? '<span class="person-list">' + s.pending.map(p => esc(p.name) + (p.status === 'approved' ? '（承認済）' : '（審査中）')).join('、') + '</span>'
-                    : '<span class="person-empty">なし</span>';
+        const slots = locData.slots.slice().sort((a,b) => a.start.localeCompare(b.start));
 
-                slotsHtml += '<div class="slot-block">'
-                    + '<div class="slot-time">🕐 ' + esc(s.start.substring(0,5)) + '〜' + esc(s.end.substring(0,5))
-                        + '<span class="slot-required">必要 ' + s.required + '名 / 確定 ' + s.assigned.length + '名</span></div>'
-                    + '<div class="person-row"><span class="label">✅ 確定:</span>' + assignedHtml + '</div>'
-                    + '<div class="person-row"><span class="label">⏳ 申請中:</span>' + pendingHtml + '</div>'
-                    + '</div>';
-            });
+        // 時間枠バッジ（横並び・簡略表示：申請ページと同じ形式）
+        const slotBadges = slots
+            .map(s => '<span class="slot-badge">' + esc(s.start.substring(0,5)) + '〜' + esc(s.end.substring(0,5)) + '</span>')
+            .join('');
+
+        // 確定・申請中は教室単位でまとめて表示
+        let assignedNames = [];
+        let pendingEntries = [];
+        let totalRequired = 0;
+        slots.forEach(s => {
+            totalRequired += s.required;
+            s.assigned.forEach(n => { if (!assignedNames.includes(n)) assignedNames.push(n); });
+            s.pending.forEach(p => pendingEntries.push(p));
+        });
+
+        const assignedHtml = assignedNames.length
+            ? '<span class="person-list">' + assignedNames.map(esc).join('、') + '</span>'
+            : '<span class="person-empty">未確定</span>';
+        const pendingHtml = pendingEntries.length
+            ? '<span class="person-list">' + pendingEntries.map(p => esc(p.name) + (p.status === 'approved' ? '（承認済）' : '（審査中）')).join('、') + '</span>'
+            : '<span class="person-empty">なし</span>';
 
         html += `
         <div class="loc-block" id="locblock-${esc(locName)}">
             <div class="loc-block-header">📍 ${esc(locName)}</div>
             <div class="loc-block-body">
-                ${slotsHtml}
+                <div class="slots-label">時間枠<span class="slot-required">必要 ${totalRequired}名 / 確定 ${assignedNames.length}名</span></div>
+                <div class="slot-list">${slotBadges}</div>
+                <div class="person-row"><span class="label">✅ 確定:</span>${assignedHtml}</div>
+                <div class="person-row"><span class="label">⏳ 申請中:</span>${pendingHtml}</div>
             </div>
         </div>`;
     });
