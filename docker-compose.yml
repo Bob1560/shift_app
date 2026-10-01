@@ -3,7 +3,8 @@ version: '3.8'
 services:
   web:
     build:
-      context: ./docker/web
+      context: docker/web
+      dockerfile: ./Dockerfile
     container_name: shift_web
     ports:
       - "8080:80"
