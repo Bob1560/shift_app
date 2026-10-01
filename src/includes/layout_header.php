@@ -22,6 +22,7 @@ $isAdmin = currentUserRole() === 'admin';
                 <a href="<?= BASE_PATH ?>/admin/dashboard.php">ダッシュボード</a>
                 <a href="<?= BASE_PATH ?>/admin/schedules.php">コマ管理</a>
                 <a href="<?= BASE_PATH ?>/admin/users.php">講師管理</a>
+                <a href="<?= BASE_PATH ?>/admin/weekly_shift.php">今週のシフト</a>
             <?php else: ?>
                 <a href="<?= BASE_PATH ?>/instructor/dashboard.php">マイページ</a>
                 <a href="<?= BASE_PATH ?>/instructor/request.php">出勤希望申請</a>
