@@ -26,6 +26,12 @@ if ($rangeEnd < $rangeStart) {
     [$rangeStart, $rangeEnd] = [$rangeEnd, $rangeStart];
 }
 
+// 前の週・次の週（現在の期間の長さを保ったまま1週間ずらす）
+$prevStart = (clone $rangeStart)->modify('-7 days');
+$prevEnd   = (clone $rangeEnd)->modify('-7 days');
+$nextStart = (clone $rangeStart)->modify('+7 days');
+$nextEnd   = (clone $rangeEnd)->modify('+7 days');
+
 // ── データ取得（確定済み担当のみ） ─────────────────────────
 $stmt = $db->prepare('
     SELECT
@@ -119,7 +125,12 @@ include __DIR__ . '/../includes/layout_header.php';
 * { box-sizing: border-box; }
 .weekly-wrap { max-width: 680px; }
 
-.range-form { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); padding: 1rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.week-nav { background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 8px; padding: 0.85rem 1.25rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; color: white; }
+.week-nav strong { font-size: 1rem; }
+.week-nav a { color: white; background: rgba(255,255,255,0.2); border: none; padding: 6px 14px; border-radius: 5px; font-weight: bold; font-size: 0.9rem; text-decoration: none; }
+.week-nav a:hover { background: rgba(255,255,255,0.35); }
+
+.range-form { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); padding: 1rem 1.25rem; margin-top: 1.25rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .range-form label { font-size: 0.85rem; color: #718096; font-weight: bold; }
 .range-form input[type="date"] { padding: 6px 8px; border: 1px solid #cbd5e0; border-radius: 5px; font-size: 0.9rem; }
 .range-form button { padding: 6px 16px; background: linear-gradient(135deg,#667eea,#764ba2); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
@@ -142,14 +153,11 @@ include __DIR__ . '/../includes/layout_header.php';
 <p style="color:#718096;font-size:0.9rem;margin-top:-0.5rem;margin-bottom:1rem;">LINEにそのまま貼り付けられるテキスト形式で表示します。</p>
 
 <div class="weekly-wrap">
-    <form class="range-form" method="GET">
-        <label>開始日</label>
-        <input type="date" name="start" value="<?= h($rangeStart->format('Y-m-d')) ?>">
-        <label>終了日</label>
-        <input type="date" name="end" value="<?= h($rangeEnd->format('Y-m-d')) ?>">
-        <button type="submit">表示</button>
-        <a class="range-reset" href="<?= BASE_PATH ?>/admin/weekly_shift.php">今週（土〜金）に戻す</a>
-    </form>
+    <div class="week-nav">
+        <a href="?start=<?= h($prevStart->format('Y-m-d')) ?>&end=<?= h($prevEnd->format('Y-m-d')) ?>">◀ 前の週</a>
+        <strong><?= h($rangeStart->format('Y/n/j')) ?> 〜 <?= h($rangeEnd->format('Y/n/j')) ?></strong>
+        <a href="?start=<?= h($nextStart->format('Y-m-d')) ?>&end=<?= h($nextEnd->format('Y-m-d')) ?>">次の週 ▶</a>
+    </div>
 
     <div class="text-card">
         <div class="text-card-head">
@@ -158,6 +166,15 @@ include __DIR__ . '/../includes/layout_header.php';
         </div>
         <textarea id="shiftText" readonly onclick="this.select()"><?= h($shiftText) ?></textarea>
     </div>
+
+    <form class="range-form" method="GET">
+        <label>開始日</label>
+        <input type="date" name="start" value="<?= h($rangeStart->format('Y-m-d')) ?>">
+        <label>終了日</label>
+        <input type="date" name="end" value="<?= h($rangeEnd->format('Y-m-d')) ?>">
+        <button type="submit">表示</button>
+        <a class="range-reset" href="<?= BASE_PATH ?>/admin/weekly_shift.php">今週（土〜金）に戻す</a>
+    </form>
 </div>
 
 <script>
