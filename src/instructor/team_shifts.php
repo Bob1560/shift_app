@@ -150,7 +150,6 @@ include __DIR__ . '/../includes/layout_header.php';
 
 /* 時間枠バッジ（横並び・簡略表示） */
 .slots-label { font-size: 0.72rem; font-weight: bold; color: #718096; margin-bottom: 5px; letter-spacing: 0.04em; }
-.slot-required { color: #718096; font-size: 0.75rem; font-weight: normal; margin-left: 6px; }
 .slot-list { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
 .slot-badge { background: #e6fffa; color: #285e61; font-size: 0.78rem; font-weight: bold; padding: 3px 8px; border-radius: 4px; }
 
@@ -259,9 +258,7 @@ function selectDate(dateStr, focusLoc) {
         // 確定・申請中は教室単位でまとめて表示
         let assignedNames = [];
         let pendingEntries = [];
-        let totalRequired = 0;
         slots.forEach(s => {
-            totalRequired += s.required;
             s.assigned.forEach(n => { if (!assignedNames.includes(n)) assignedNames.push(n); });
             s.pending.forEach(p => pendingEntries.push(p));
         });
@@ -277,7 +274,7 @@ function selectDate(dateStr, focusLoc) {
         <div class="loc-block" id="locblock-${esc(locName)}">
             <div class="loc-block-header">📍 ${esc(locName)}</div>
             <div class="loc-block-body">
-                <div class="slots-label">時間枠<span class="slot-required">必要 ${totalRequired}名 / 確定 ${assignedNames.length}名</span></div>
+                <div class="slots-label">時間枠</div>
                 <div class="slot-list">${slotBadges}</div>
                 <div class="person-row"><span class="label">✅ 確定:</span>${assignedHtml}</div>
                 <div class="person-row"><span class="label">⏳ 申請中:</span>${pendingHtml}</div>
