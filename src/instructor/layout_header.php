@@ -26,6 +26,7 @@ $isAdmin = currentUserRole() === 'admin';
                 <a href="<?= BASE_PATH ?>/instructor/dashboard.php">マイページ</a>
                 <a href="<?= BASE_PATH ?>/instructor/request.php">出勤希望申請</a>
                 <a href="<?= BASE_PATH ?>/instructor/my_shifts.php">確定シフト</a>
+                <a href="<?= BASE_PATH ?>/instructor/team_shifts.php">全講師の状況</a>
             <?php endif; ?>
             <span class="header-user">👤 <?= h(currentUserName()) ?></span>
             <a href="<?= BASE_PATH ?>/auth/logout.php" class="btn-logout">ログアウト</a>
