@@ -19,9 +19,9 @@ $isAdmin = currentUserRole() === 'admin';
         </a>
         <nav class="header-nav">
             <?php if ($isAdmin): ?>
-                <a href="<?= BASE_PATH ?>/admin/dashboard.php">ダッシュボード</a>
-                <a href="<?= BASE_PATH ?>/admin/schedules.php">コマ管理</a>
-                <a href="<?= BASE_PATH ?>/admin/users.php">講師管理</a>
+                <a href="<?= BASE_PATH ?>/admin/dashboard.php">講師シフト管理</a>
+                <a href="<?= BASE_PATH ?>/admin/schedules.php">日程、コマ管理</a>
+                <a href="<?= BASE_PATH ?>/admin/users.php">アカウント管理</a>
                 <a href="<?= BASE_PATH ?>/admin/weekly_shift.php">今週のシフト</a>
             <?php else: ?>
                 <a href="<?= BASE_PATH ?>/instructor/dashboard.php">マイページ</a>

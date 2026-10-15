@@ -4,7 +4,7 @@ requireAdmin();
 
 $db = Database::getInstance();
 
-$month = $_GET['month'] ?? date('Y-m');
+$month = $_GET['month'] ?? lastEditedMonth();
 try {
     $currentDate = new DateTime($month . '-01');
 } catch (Exception $e) {
@@ -124,7 +124,7 @@ $allInstructors = $db->query(
     'SELECT id, name FROM users WHERE role="instructor" AND is_active=1 ORDER BY name'
 )->fetchAll();
 
-$pageTitle = '管理者ダッシュボード';
+$pageTitle = '講師シフト管理';
 include __DIR__ . '/../includes/layout_header.php';
 ?>
 
@@ -220,7 +220,7 @@ body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height
 </style>
 
 <div style="margin: 1.5rem 1.5rem 0; display:flex; justify-content:space-between; align-items:center;">
-    <h1 style="margin:0;color:white;font-size:1.75rem;">📊 シフト管理ダッシュボード</h1>
+    <h1 style="margin:0;color:white;font-size:1.75rem;">📊 講師シフト管理</h1>
 </div>
 
 <div class="dash-wrap">

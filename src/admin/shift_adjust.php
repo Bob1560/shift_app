@@ -135,7 +135,7 @@ include __DIR__ . '/../includes/layout_header.php';
 
 <div class="flex-between mb-2">
     <h1 class="page-title" style="margin:0;">🔧 シフト調整</h1>
-    <a href="<?= BASE_PATH ?>/admin/schedules.php?month=<?= h($month) ?>" class="btn btn-secondary btn-sm">← コマ管理へ</a>
+    <a href="<?= BASE_PATH ?>/admin/schedules.php?month=<?= h($month) ?>" class="btn btn-secondary btn-sm">← 日程、コマ管理へ</a>
 </div>
 
 <?php foreach ($errors as $e): ?>

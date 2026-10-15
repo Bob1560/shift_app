@@ -41,9 +41,12 @@ $stmt = $db->prepare('
         s.end_time,
         l.name AS location_name,
         l.sort_order,
+        v.name AS venue_name,
+        s.note,
         u.name AS user_name
     FROM schedules s
     JOIN locations l ON s.location_id = l.id
+    LEFT JOIN locations v ON s.venue_location_id = v.id
     LEFT JOIN shift_assignments sa ON sa.schedule_id = s.id
     LEFT JOIN users u ON sa.user_id = u.id AND u.is_active = 1
     WHERE s.date >= ? AND s.date <= ?
@@ -63,6 +66,8 @@ foreach ($rows as $r) {
             'end'        => $r['end_time'],
             'location'   => $r['location_name'],
             'sort_order' => $r['sort_order'],
+            'venue'      => $r['venue_name'],
+            'note'       => $r['note'],
             'names'      => [],
         ];
     }
@@ -94,9 +99,13 @@ foreach ($byDate as $dateStr => $items) {
     // 教室単位にまとめる（時間枠は横並び、講師名は重複なしで結合）
     $byLoc = [];
     foreach ($items as $it) {
-        $loc = $it['location'];
+        $isTrial = $it['location'] === '体験';
+        $loc = $isTrial && $it['venue'] ? $it['location'] . '（' . $it['venue'] . '）' : $it['location'];
         if (!isset($byLoc[$loc])) {
-            $byLoc[$loc] = ['sort_order' => $it['sort_order'], 'times' => [], 'names' => []];
+            $byLoc[$loc] = ['sort_order' => $it['sort_order'], 'times' => [], 'names' => [], 'notes' => []];
+        }
+        if ($isTrial && $it['note'] && !in_array($it['note'], $byLoc[$loc]['notes'], true)) {
+            $byLoc[$loc]['notes'][] = $it['note'];
         }
         $byLoc[$loc]['times'][] = substr($it['start'], 0, 5) . '〜' . substr($it['end'], 0, 5);
         foreach ($it['names'] as $n) {
@@ -111,6 +120,9 @@ foreach ($byDate as $dateStr => $items) {
     foreach ($byLoc as $locName => $locData) {
         $names = $locData['names'] ? implode('、', $locData['names']) : '担当未定';
         $lines[] = $locName . ' ' . implode(' ', $locData['times']) . ' ' . $names;
+        foreach ($locData['notes'] as $note) {
+            $lines[] = '　備考：' . $note;
+        }
     }
     $lines[] = '';
 }

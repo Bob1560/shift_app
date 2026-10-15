@@ -70,9 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'assign') {
     }
 
     // コマの存在確認
-    $stmt = $db->prepare('SELECT id FROM schedules WHERE id = ?');
+    $stmt = $db->prepare('SELECT id, date FROM schedules WHERE id = ?');
     $stmt->execute([$scheduleId]);
-    if (!$stmt->fetch()) {
+    $schedule = $stmt->fetch();
+    if (!$schedule) {
         http_response_code(400); echo json_encode(['error' => 'コマが存在しません']); exit;
     }
 
@@ -92,6 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'assign') {
     $db->prepare("UPDATE shift_requests SET status = 'approved' WHERE user_id = ? AND schedule_id = ? AND status = 'pending'")
        ->execute([$instructorId, $scheduleId]);
 
+    rememberEditedMonth($schedule['date']);
     echo json_encode(['success' => true, 'assignment_id' => (int)$newId]);
     exit;
 }
@@ -110,12 +112,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'remove') {
     }
 
     // 関連する申請をpendingに戻す
-    $stmt = $db->prepare('SELECT user_id, schedule_id FROM shift_assignments WHERE id = ?');
+    $stmt = $db->prepare('
+        SELECT sa.user_id, sa.schedule_id, s.date
+        FROM shift_assignments sa
+        JOIN schedules s ON sa.schedule_id = s.id
+        WHERE sa.id = ?
+    ');
     $stmt->execute([$assignmentId]);
     $sa = $stmt->fetch();
     if ($sa) {
         $db->prepare("UPDATE shift_requests SET status = 'pending' WHERE user_id = ? AND schedule_id = ? AND status = 'approved'")
            ->execute([$sa['user_id'], $sa['schedule_id']]);
+        rememberEditedMonth($sa['date']);
     }
 
     $db->prepare('DELETE FROM shift_assignments WHERE id = ?')->execute([$assignmentId]);

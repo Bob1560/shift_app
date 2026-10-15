@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
 // ユーザー一覧取得
 $users = $db->query('SELECT * FROM users ORDER BY role DESC, id')->fetchAll();
 
-$pageTitle = '講師管理';
+$pageTitle = 'アカウント管理';
 include __DIR__ . '/../includes/layout_header.php';
 ?>
 

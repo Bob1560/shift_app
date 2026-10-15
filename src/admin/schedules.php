@@ -4,7 +4,7 @@ requireAdmin();
 
 $db = Database::getInstance();
 
-$month = $_GET['month'] ?? date('Y-m');
+$month = $_GET['month'] ?? lastEditedMonth();
 try {
     $currentDate = new DateTime($month . '-01');
 } catch (Exception $e) {
@@ -19,9 +19,10 @@ $daysInMonth = (int)$currentDate->format('t');
 $endDate     = (clone $currentDate)->modify('+1 month');
 
 $stmt = $db->prepare('
-    SELECT s.*, l.name AS location_name
+    SELECT s.*, l.name AS location_name, v.name AS venue_name
     FROM schedules s
     JOIN locations l ON s.location_id = l.id
+    LEFT JOIN locations v ON s.venue_location_id = v.id
     WHERE s.date >= ? AND s.date < ?
     ORDER BY s.date, l.sort_order, s.start_time
 ');
@@ -40,7 +41,15 @@ foreach ($allSchedules as $s) {
 
 $locations = $db->query('SELECT * FROM locations WHERE is_active = 1 ORDER BY sort_order')->fetchAll();
 
-$pageTitle = 'コマ管理';
+// 体験の会場候補は「〇〇教室」という名前の教室（体験・ZOOM会議・イベントは除く）
+$trialLoc = null;
+$venues   = [];
+foreach ($locations as $l) {
+    if ($l['name'] === '体験') $trialLoc = $l['id'];
+    if (mb_substr($l['name'], -2) === '教室') $venues[] = ['id' => $l['id'], 'name' => $l['name']];
+}
+
+$pageTitle = '日程、コマ管理';
 include __DIR__ . '/../includes/layout_header.php';
 ?>
 
@@ -83,7 +92,9 @@ include __DIR__ . '/../includes/layout_header.php';
 .panel-empty { text-align: center; color: #a0aec0; padding: 3rem 1rem; }
 .panel-date-title { font-size: 1rem; font-weight: bold; color: #2d3748; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 2px solid #e2e8f0; }
 .loc-section { margin-bottom: 1rem; }
-.loc-label { font-weight: bold; color: #667eea; font-size: 0.85rem; margin-bottom: 4px; }
+.loc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.loc-label { font-weight: bold; color: #667eea; font-size: 0.85rem; }
+.trial-info { font-size: 0.8rem; color: #4a5568; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 4px; padding: 3px 8px; margin-bottom: 4px; }
 .time-row { display: flex; align-items: center; justify-content: space-between; background: #f8faff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 6px 10px; margin-bottom: 4px; font-size: 0.85rem; }
 .time-row .t { font-weight: bold; color: #2d3748; }
 .del-btn { background: #f56565; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 0.75rem; }
@@ -107,7 +118,7 @@ include __DIR__ . '/../includes/layout_header.php';
 </style>
 
 <div class="flex-between mb-2">
-    <h1 class="page-title" style="margin:0;">📋 コマ管理</h1>
+    <h1 class="page-title" style="margin:0;">📋 日程、コマ管理</h1>
 </div>
 
 <div class="page-wrap">
@@ -179,9 +190,13 @@ include __DIR__ . '/../includes/layout_header.php';
                 <label class="form-label">必要人数</label>
                 <input type="number" class="form-input" name="required_staff_count" value="1" min="1" max="10" style="max-width:100px;">
             </div>
-            <div class="form-group">
-                <label class="form-label">備考</label>
-                <input type="text" class="form-input" name="note" placeholder="教材準備必要など" maxlength="200">
+            <div class="form-group" id="venueGroup" style="display:none;">
+                <label class="form-label">会場（体験）</label>
+                <select class="form-input" name="venue_location_id" id="venueSelect"></select>
+            </div>
+            <div class="form-group" id="noteGroup" style="display:none;">
+                <label class="form-label">備考（体験）</label>
+                <input type="text" class="form-input" name="note" placeholder="体験の内容・持ち物など" maxlength="200">
             </div>
             <button type="submit" class="submit-btn">追加する</button>
         </form>
@@ -197,6 +212,8 @@ const TIMES = [
 ];
 const BASE_PATH = <?= json_encode(BASE_PATH) ?>;
 const LOCS      = <?= json_encode($locations) ?>;
+const TRIAL_ID  = <?= json_encode($trialLoc) ?>;       // 「体験」の location_id
+const VENUES    = <?= json_encode($venues) ?>;          // 会場として選べる教室
 const BY_DATE   = <?= json_encode($schedulesByDate) ?>;   // {date: {locName: [schedule,...]}}
 const ALL_SCH   = <?= json_encode($allSchedules) ?>;
 const CSRF      = <?= json_encode(generateCsrfToken()) ?>;
@@ -215,8 +232,18 @@ function selectDate(dateStr, focusLoc) {
         locNames.forEach(locName => {
             const open = !focusLoc || focusLoc === locName;
             html += '<div class="loc-section">';
-            html += '<div class="loc-label" style="cursor:pointer;" onclick="toggleSection(this)">▾ 📍 ' + escHtml(locName) + '</div>';
+            const locId = byLoc[locName][0].location_id;
+            html += '<div class="loc-head">'
+                  + '<div class="loc-label" style="cursor:pointer;" onclick="toggleSection(this)">▾ 📍 ' + escHtml(locName) + '</div>'
+                  + '<button class="del-btn" onclick="delLocation(\'' + dateStr + '\',' + locId + ',' + byLoc[locName].length + ',this)" data-loc="' + escHtml(locName) + '">教室を削除</button>'
+                  + '</div>';
             html += '<div class="loc-slots" style="display:' + (open ? 'block' : 'none') + ';">';
+            if (String(locId) === String(TRIAL_ID)) {
+                const venueName = byLoc[locName].map(s => s.venue_name).find(x => x);
+                const noteText  = byLoc[locName].map(s => s.note).find(x => x);
+                if (venueName) html += '<div class="trial-info">会場：' + escHtml(venueName) + '</div>';
+                if (noteText)  html += '<div class="trial-info">備考：' + escHtml(noteText) + '</div>';
+            }
             byLoc[locName].forEach(s => {
                 html += '<div class="time-row">'
                       + '<span class="t">' + s.start_time.substring(0,5) + '〜' + s.end_time.substring(0,5) + '</span>'
@@ -242,7 +269,7 @@ function selectDate(dateStr, focusLoc) {
 }
 
 function toggleSection(labelEl) {
-    const slots = labelEl.nextElementSibling;
+    const slots = labelEl.parentElement.nextElementSibling;
     if (slots.style.display === 'none') {
         slots.style.display = 'block';
         labelEl.textContent = labelEl.textContent.replace('▸','▾');
@@ -262,6 +289,19 @@ function openModal(dateStr) {
         lh += '<div class="check-item"><input type="checkbox" name="loc" value="' + l.id + '" id="l' + l.id + '"><label for="l' + l.id + '">' + escHtml(l.name) + '</label></div>';
     });
     document.getElementById('locChecks').innerHTML = lh;
+
+    // 体験にチェックしたときだけ、会場と備考の入力欄を表示する
+    document.getElementById('venueSelect').innerHTML = '<option value="">（会場を選択）</option>'
+        + VENUES.map(v => '<option value="' + v.id + '">' + escHtml(v.name) + '</option>').join('');
+    document.querySelector('input[name="note"]').value = '';
+    const trialBox = document.getElementById('l' + TRIAL_ID);
+    const syncTrial = () => {
+        const on = !!(trialBox && trialBox.checked);
+        document.getElementById('venueGroup').style.display = on ? 'block' : 'none';
+        document.getElementById('noteGroup').style.display  = on ? 'block' : 'none';
+    };
+    if (trialBox) trialBox.addEventListener('change', syncTrial);
+    syncTrial();
 
     let th = '';
     TIMES.forEach(t => {
@@ -287,6 +327,7 @@ function addSchedules(e) {
 
     const rc = document.querySelector('input[name="required_staff_count"]').value;
     const nt = document.querySelector('input[name="note"]').value;
+    const venue = document.getElementById('venueSelect').value;
     let done = 0, total = ls.length * ts.length;
 
     ls.forEach(l => {
@@ -298,7 +339,9 @@ function addSchedules(e) {
             fd.append('location_id', l);
             fd.append('start_time', t);
             fd.append('required_staff_count', rc);
-            fd.append('note', nt);
+            const isTrial = String(l) === String(TRIAL_ID);
+            fd.append('note', isTrial ? nt : '');
+            if (isTrial && venue) fd.append('venue_location_id', venue);
             fetch(BASE_PATH + '/admin/schedules_api.php', {method:'POST', body:fd})
                 .then(r => r.json())
                 .then(() => { if (++done === total) { closeModal(); location.reload(); } });
@@ -312,6 +355,22 @@ function delSchedule(id) {
     fd.append('csrf_token', CSRF);
     fd.append('action', 'delete');
     fd.append('schedule_id', id);
+    fetch(BASE_PATH + '/admin/schedules_api.php', {method:'POST', body:fd})
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) location.reload();
+            else alert(data.error || '削除できませんでした');
+        });
+}
+
+function delLocation(dateStr, locationId, slotCount, btn) {
+    const locName = btn.dataset.loc;
+    if (!confirm(locName + ' のコマ（' + slotCount + '件）をすべて削除しますか？')) return;
+    const fd = new FormData();
+    fd.append('csrf_token', CSRF);
+    fd.append('action', 'delete_location');
+    fd.append('date', dateStr);
+    fd.append('location_id', locationId);
     fetch(BASE_PATH + '/admin/schedules_api.php', {method:'POST', body:fd})
         .then(r => r.json())
         .then(data => {

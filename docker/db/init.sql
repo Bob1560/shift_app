@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS locations (
 CREATE TABLE IF NOT EXISTS schedules (
     id INT AUTO_INCREMENT PRIMARY KEY,
     location_id INT NOT NULL,
+    venue_location_id INT DEFAULT NULL,
     date DATE NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
@@ -52,6 +53,7 @@ CREATE TABLE IF NOT EXISTS schedules (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (location_id) REFERENCES locations(id),
+    FOREIGN KEY (venue_location_id) REFERENCES locations(id) ON DELETE SET NULL,
     FOREIGN KEY (created_by) REFERENCES users(id),
     INDEX idx_date (date),
     INDEX idx_location_date (location_id, date)

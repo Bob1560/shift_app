@@ -79,6 +79,26 @@ function h(mixed $value): string {
     return htmlspecialchars((string)$value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 }
 
+// ===== 作業中の月（日程、コマ管理・講師シフト管理で共有） =====
+
+// コマや担当を編集した月を記憶し、管理画面を次回開いたときにその月を表示する
+function rememberEditedMonth(string $date): void {
+    if (preg_match('/^(\d{4}-\d{2})-\d{2}$/', $date, $m)) {
+        setcookie('schedules_last_month', $m[1], [
+            'expires'  => time() + 86400 * 365,
+            'path'     => BASE_PATH . '/admin',
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+}
+
+// 最後に編集した月（Y-m）。記憶がなければ今月
+function lastEditedMonth(): string {
+    $m = $_COOKIE['schedules_last_month'] ?? '';
+    return preg_match('/^\d{4}-\d{2}$/', $m) ? $m : date('Y-m');
+}
+
 // ===== ユーザー取得 =====
 
 function getUserById(int $id): ?array {
