@@ -129,7 +129,7 @@ foreach ($byDate as $dateStr => $items) {
 
 $shiftText = rtrim(implode("\n", $lines));
 
-$pageTitle = '今週のシフト';
+$pageTitle = '週シフト';
 include __DIR__ . '/../includes/layout_header.php';
 ?>
 
@@ -160,7 +160,7 @@ include __DIR__ . '/../includes/layout_header.php';
 </style>
 
 <div class="flex-between mb-2">
-    <h1 class="page-title" style="margin:0;">📅 今週のシフト</h1>
+    <h1 class="page-title" style="margin:0;">📅 週シフト</h1>
 </div>
 <p style="color:#718096;font-size:0.9rem;margin-top:-0.5rem;margin-bottom:1rem;">LINEにそのまま貼り付けられるテキスト形式で表示します。</p>
 

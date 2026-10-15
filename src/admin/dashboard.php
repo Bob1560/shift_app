@@ -124,7 +124,7 @@ $allInstructors = $db->query(
     'SELECT id, name FROM users WHERE role="instructor" AND is_active=1 ORDER BY name'
 )->fetchAll();
 
-$pageTitle = '講師シフト管理';
+$pageTitle = '講師シフト割り当て';
 include __DIR__ . '/../includes/layout_header.php';
 ?>
 
@@ -220,7 +220,7 @@ body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height
 </style>
 
 <div style="margin: 1.5rem 1.5rem 0; display:flex; justify-content:space-between; align-items:center;">
-    <h1 style="margin:0;color:white;font-size:1.75rem;">📊 講師シフト管理</h1>
+    <h1 style="margin:0;color:white;font-size:1.75rem;">📊 講師シフト割り当て</h1>
 </div>
 
 <div class="dash-wrap">

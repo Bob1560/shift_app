@@ -79,7 +79,7 @@ function h(mixed $value): string {
     return htmlspecialchars((string)$value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 }
 
-// ===== 作業中の月（日程、コマ管理・講師シフト管理で共有） =====
+// ===== 作業中の月（日程管理・講師シフト割り当てで共有） =====
 
 // コマや担当を編集した月を記憶し、管理画面を次回開いたときにその月を表示する
 function rememberEditedMonth(string $date): void {

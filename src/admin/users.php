@@ -71,11 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
 // ユーザー一覧取得
 $users = $db->query('SELECT * FROM users ORDER BY role DESC, id')->fetchAll();
 
-$pageTitle = 'アカウント管理';
+$pageTitle = '講師アカウント管理';
 include __DIR__ . '/../includes/layout_header.php';
 ?>
 
-<h1 class="page-title">👥 講師・アカウント管理</h1>
+<h1 class="page-title">👥 講師アカウント管理</h1>
 
 <?php foreach ($errors as $e): ?>
     <div class="alert alert-error"><?= h($e) ?></div>

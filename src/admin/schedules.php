@@ -49,7 +49,7 @@ foreach ($locations as $l) {
     if (mb_substr($l['name'], -2) === '教室') $venues[] = ['id' => $l['id'], 'name' => $l['name']];
 }
 
-$pageTitle = '日程、コマ管理';
+$pageTitle = '日程管理';
 include __DIR__ . '/../includes/layout_header.php';
 ?>
 
@@ -118,7 +118,7 @@ include __DIR__ . '/../includes/layout_header.php';
 </style>
 
 <div class="flex-between mb-2">
-    <h1 class="page-title" style="margin:0;">📋 日程、コマ管理</h1>
+    <h1 class="page-title" style="margin:0;">📋 日程管理</h1>
 </div>
 
 <div class="page-wrap">
