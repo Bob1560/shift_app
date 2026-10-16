@@ -330,6 +330,24 @@ function makePlan(array $existing, array $rows): array
     return $plan;
 }
 
+function conflictMessages(array $plan): array
+{
+    $out = [];
+    foreach ($plan['conflicts'] as $e) {
+        $out[] = jpDate($e['date']) . ' ' . $e['location_name'] . ' ' . slotLabel($e['start_time'], $e['end_time'])
+            . ' は確定済みの担当講師がいるため削除できません。先に「講師シフト割り当て」で担当を外すか、行を残してください。';
+    }
+    return $out;
+}
+
+function jsonReply(array $data, int $code = 200): void
+{
+    http_response_code($code);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 function applyPlan(PDO $db, array $plan, int $userId): void
 {
     $db->beginTransaction();
@@ -398,6 +416,54 @@ if ($action === 'download') {
     exit;
 }
 
+if ($action === 'grid_check' || $action === 'grid_apply') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        jsonReply(['ok' => false, 'errors' => [['index' => null, 'message' => '不正なリクエストです。ページを開き直してください。']]], 400);
+    }
+    $in = json_decode((string)($_POST['rows'] ?? ''), true);
+    if (!is_array($in) || count($in) > MAX_DATA_ROWS + 300) {
+        jsonReply(['ok' => false, 'errors' => [['index' => null, 'message' => '表のデータを読み取れません。']]], 400);
+    }
+    $sheet = [1 => ['日付', '教室', '時間コマ', '必要人数', '会場（体験のみ）', '備考']];
+    foreach (array_values($in) as $i => $r) {
+        $r = is_array($r) ? $r : [];
+        $sheet[$i + 2] = [(string)($r['date'] ?? ''), (string)($r['loc'] ?? ''), (string)($r['slot'] ?? ''),
+                          (string)($r['req'] ?? ''), (string)($r['venue'] ?? ''), (string)($r['note'] ?? '')];
+    }
+    [$rows, $errs] = parseSheet($sheet, $month, $locByName, $venueByName, $trialId);
+    if ($errs) {
+        $list = [];
+        foreach ($errs as $m) {
+            if (preg_match('/^(\d+)行目: (.*)$/u', $m, $mm)) {
+                // 表では見出し行がないため、文中の行番号（「○行目にもあります」）も1つ減らして表の行番号に合わせる
+                $msg = preg_replace_callback('/(\d+)行目にもあります/u', fn($x) => ((int)$x[1] - 1) . '行目にもあります', $mm[2]);
+                $list[] = ['index' => (int)$mm[1] - 2, 'message' => $msg];
+            } else {
+                $list[] = ['index' => null, 'message' => $m];
+            }
+        }
+        jsonReply(['ok' => false, 'errors' => $list]);
+    }
+    $plan = makePlan(loadExisting($db, $from, $to), $rows);
+    if ($plan['conflicts']) {
+        jsonReply(['ok' => false, 'errors' => array_map(fn($m) => ['index' => null, 'message' => $m], conflictMessages($plan))]);
+    }
+    if ($action === 'grid_check') {
+        jsonReply([
+            'ok' => true,
+            'tiles' => ['insert' => count($plan['insert']), 'update' => count($plan['update']),
+                        'delete' => count($plan['delete']), 'same' => $plan['same']],
+            'deletes' => array_map(fn($e) => ['label' => jpDate($e['date']) . ' ' . $e['location_name'] . ' ' . slotLabel($e['start_time'], $e['end_time']),
+                                              'requests' => $e['requests']], array_slice($plan['delete'], 0, 60)),
+        ]);
+    }
+    applyPlan($db, $plan, currentUserId());
+    rememberEditedMonth($from);
+    setFlash('success', $month->format('Y年n月') . 'の日程を保存しました（追加' . count($plan['insert'])
+        . '件・変更' . count($plan['update']) . '件・削除' . count($plan['delete']) . '件）。');
+    jsonReply(['ok' => true, 'redirect' => BASE_PATH . $backUrl]);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect($backUrl);
 }
@@ -453,10 +519,7 @@ if ($action === 'upload') {
 }
 
 if ($plan && $plan['conflicts']) {
-    foreach ($plan['conflicts'] as $e) {
-        $errors[] = jpDate($e['date']) . ' ' . $e['location_name'] . ' ' . slotLabel($e['start_time'], $e['end_time'])
-            . ' は確定済みの担当講師がいるため削除できません。先に「講師シフト割り当て」で担当を外すか、Excelに行を残してください。';
-    }
+    $errors = array_merge($errors, conflictMessages($plan));
 }
 
 $locName = fn(int $id) => array_search($id, $locByName, true) ?: '';

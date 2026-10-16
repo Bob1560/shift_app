@@ -118,6 +118,9 @@ include __DIR__ . '/../includes/layout_header.php';
 .excel-bar { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); padding: 0.85rem 1.25rem; margin-bottom: 1rem; }
 .excel-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .excel-main form { display: flex; align-items: center; gap: 8px; margin: 0; }
+.manual-xl { margin-top: 8px; font-size: 0.82rem; color: #4a5568; }
+.manual-xl summary { cursor: pointer; }
+.xl-btn.xl-grid { background: linear-gradient(135deg, #3182ce, #2b6cb0); }
 .excel-hint { margin-top: 6px; font-size: 0.78rem; color: #718096; line-height: 1.6; }
 .xl-btn { display: inline-block; padding: 6px 14px; border: none; border-radius: 5px; background: #38a169; color: #fff; font-weight: bold; font-size: 0.85rem; text-decoration: none; cursor: pointer; }
 .xl-btn:hover { opacity: 0.88; }
@@ -129,21 +132,30 @@ include __DIR__ . '/../includes/layout_header.php';
     <h1 class="page-title" style="margin:0;">📋 日程管理</h1>
 </div>
 
-<p class="input-guide">💡 コマの入力は、<b>カレンダーの日付をクリック</b>して1日ずつ追加・削除する方法と、下の<b>Excelでまとめて入力・編集</b>する方法があります。</p>
+<p class="input-guide">💡 コマの入力は、<b>カレンダーの日付をクリック</b>して1日ずつ追加・削除する方法と、<b>表やExcelでまとめて入力・編集</b>する方法があります。</p>
 
 <div class="excel-bar">
     <div class="excel-main">
-        <strong>📊 Excelで入力・編集（<?= h($currentDate->format('Y年n月')) ?>）</strong>
-        <a class="xl-btn" href="<?= BASE_PATH ?>/admin/schedules_excel.php?action=download&month=<?= h($currentDate->format('Y-m')) ?>">📥 Excelをダウンロード</a>
-        <form method="POST" action="<?= BASE_PATH ?>/admin/schedules_excel.php" enctype="multipart/form-data">
-            <?= csrfField() ?>
-            <input type="hidden" name="action" value="upload">
-            <input type="hidden" name="month" value="<?= h($currentDate->format('Y-m')) ?>">
-            <input type="file" name="xlsx" accept=".xlsx" required>
-            <button type="submit" class="xl-btn xl-up">📤 読み込む</button>
-        </form>
+        <strong>📊 まとめて入力・編集（<?= h($currentDate->format('Y年n月')) ?>）</strong>
+        <a class="xl-btn xl-grid" href="<?= BASE_PATH ?>/admin/schedules_grid.php?month=<?= h($currentDate->format('Y-m')) ?>">📋 表で編集</a>
     </div>
-    <div class="excel-hint">この月の日程をExcelに書き出して編集し、読み込んで保存できます。新しい月も同じ手順で登録できます。読み込むと確認画面が出て、「保存する」を押すまでデータは変わりません。保存すると、この月の日程はExcelの内容に置き換わり、空白にした行は削除されます。</div>
+    <div class="excel-hint">
+        <b>表で編集</b>：この画面の中でExcelのように編集して、保存ボタンで反映します（ファイル操作は不要。スマホでも使えます）。
+        反映する前に確認画面が出て、保存するとこの月の日程は編集した内容に置き換わります（空白の行は削除）。
+    </div>
+    <details class="manual-xl">
+        <summary>ファイルを手動で操作する（ダウンロード／読み込み）</summary>
+        <div class="excel-main" style="margin-top:8px;">
+            <a class="xl-btn" href="<?= BASE_PATH ?>/admin/schedules_excel.php?action=download&month=<?= h($currentDate->format('Y-m')) ?>">📥 Excelをダウンロード</a>
+            <form method="POST" action="<?= BASE_PATH ?>/admin/schedules_excel.php" enctype="multipart/form-data">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="upload">
+                <input type="hidden" name="month" value="<?= h($currentDate->format('Y-m')) ?>">
+                <input type="file" name="xlsx" accept=".xlsx" required>
+                <button type="submit" class="xl-btn xl-up">📤 読み込む</button>
+            </form>
+        </div>
+    </details>
 </div>
 
 <div class="page-wrap">
