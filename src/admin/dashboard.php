@@ -141,7 +141,11 @@ body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height
 .nav-btn:hover { background: rgba(255,255,255,0.35); }
 .weekdays { display: grid; grid-template-columns: repeat(7,1fr); background: #f0f4ff; border-bottom: 1px solid #e2e8f0; }
 .weekday { padding: 8px; text-align: center; font-weight: bold; font-size: 0.78rem; }
-.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; background: #e2e8f0; padding: 1px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; background: #e2e8f0; padding: 1px; }
+.cal-grid.hide-instr .chip-instr { display: none; }
+.instr-toggle { padding: 8px 14px; background: #f7f9ff; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; }
+.instr-toggle label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 0; color: #4a5568; font-weight: bold; }
+.instr-toggle input { width: 18px; height: 18px; }
 
 /* セルは可変高さ＝教室数に応じて伸びる */
 .cal-cell { background: white; padding: 5px; min-height: 80px; cursor: pointer; transition: background 0.12s; }
@@ -216,10 +220,19 @@ body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height
 .assign-row button { padding: 5px 12px; background: linear-gradient(135deg,#667eea,#764ba2); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.82rem; font-weight: bold; white-space: nowrap; }
 .assign-row button:hover { opacity: 0.88; }
 
+.dash-title { margin: 1.5rem 1.5rem 0; display: flex; justify-content: space-between; align-items: center; }
 @media (max-width: 1100px) { .dash-wrap { grid-template-columns: 1fr; } }
+@media (max-width: 600px) {
+    .dash-title { margin: 0.5rem 0 0; }
+    .dash-title h1 { font-size: 1.3rem !important; }
+    .dash-wrap { margin: 0.5rem 0 3rem; gap: 1rem; }
+    .cal-header { padding: 0.9rem 1rem; }
+    .cal-title { font-size: 1.15rem; }
+    .cal-cell { padding: 3px; }
+}
 </style>
 
-<div style="margin: 1.5rem 1.5rem 0; display:flex; justify-content:space-between; align-items:center;">
+<div class="dash-title">
     <h1 style="margin:0;color:white;font-size:1.75rem;">📊 講師シフト割り当て</h1>
 </div>
 
@@ -234,13 +247,17 @@ body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height
             </div>
         </div>
 
+        <div class="instr-toggle">
+            <label><input type="checkbox" id="showInstr"> 担当者名を表示</label>
+        </div>
+
         <div class="weekdays">
             <?php foreach (['日','月','火','水','木','金','土'] as $i => $d): ?>
                 <div class="weekday" style="color:<?= $i===0?'#e53e3e':($i===6?'#3182ce':'#667eea') ?>"><?= $d ?></div>
             <?php endforeach; ?>
         </div>
 
-        <div class="cal-grid">
+        <div class="cal-grid" id="calGrid">
             <?php for ($i = 0; $i < $firstDay; $i++): ?>
                 <div class="cal-cell other-month"></div>
             <?php endfor; ?>
@@ -298,6 +315,18 @@ const BY_DATE     = <?= json_encode($byDate, JSON_UNESCAPED_UNICODE) ?>;
 const INSTRUCTORS = <?= json_encode($allInstructors, JSON_UNESCAPED_UNICODE) ?>;
 const CSRF        = <?= json_encode(generateCsrfToken()) ?>;
 let currentDateStr = null;
+
+// 担当者名の表示／非表示（選んだ状態を記憶。初回は、スマホ幅なら非表示、それ以外は表示）
+const showInstr = document.getElementById('showInstr');
+const calGrid   = document.getElementById('calGrid');
+let savedPref = null;
+try { savedPref = localStorage.getItem('dashShowInstr'); } catch (e) {}
+showInstr.checked = savedPref === null ? !window.matchMedia('(max-width: 600px)').matches : savedPref === '1';
+calGrid.classList.toggle('hide-instr', !showInstr.checked);
+showInstr.addEventListener('change', () => {
+    calGrid.classList.toggle('hide-instr', !showInstr.checked);
+    try { localStorage.setItem('dashShowInstr', showInstr.checked ? '1' : '0'); } catch (e) {}
+});
 
 function selectDate(dateStr, focusLoc) {
     currentDateStr = dateStr;
