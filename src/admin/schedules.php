@@ -114,11 +114,36 @@ include __DIR__ . '/../includes/layout_header.php';
 .form-group { margin-bottom: 1rem; }
 .submit-btn { width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 0.5rem; }
 .submit-btn:hover { opacity: 0.9; }
+.input-guide { margin: 0 0 0.75rem; font-size: 0.85rem; color: #4a5568; }
+.excel-bar { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); padding: 0.85rem 1.25rem; margin-bottom: 1rem; }
+.excel-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.excel-main form { display: flex; align-items: center; gap: 8px; margin: 0; }
+.excel-hint { margin-top: 6px; font-size: 0.78rem; color: #718096; line-height: 1.6; }
+.xl-btn { display: inline-block; padding: 6px 14px; border: none; border-radius: 5px; background: #38a169; color: #fff; font-weight: bold; font-size: 0.85rem; text-decoration: none; cursor: pointer; }
+.xl-btn:hover { opacity: 0.88; }
+.xl-btn.xl-up { background: linear-gradient(135deg, #667eea, #764ba2); }
 @media (max-width: 1024px) { .page-wrap { grid-template-columns: 1fr; } }
 </style>
 
 <div class="flex-between mb-2">
     <h1 class="page-title" style="margin:0;">📋 日程管理</h1>
+</div>
+
+<p class="input-guide">💡 コマの入力は、<b>カレンダーの日付をクリック</b>して1日ずつ追加・削除する方法と、下の<b>Excelでまとめて入力・編集</b>する方法があります。</p>
+
+<div class="excel-bar">
+    <div class="excel-main">
+        <strong>📊 Excelで入力・編集（<?= h($currentDate->format('Y年n月')) ?>）</strong>
+        <a class="xl-btn" href="<?= BASE_PATH ?>/admin/schedules_excel.php?action=download&month=<?= h($currentDate->format('Y-m')) ?>">📥 Excelをダウンロード</a>
+        <form method="POST" action="<?= BASE_PATH ?>/admin/schedules_excel.php" enctype="multipart/form-data">
+            <?= csrfField() ?>
+            <input type="hidden" name="action" value="upload">
+            <input type="hidden" name="month" value="<?= h($currentDate->format('Y-m')) ?>">
+            <input type="file" name="xlsx" accept=".xlsx" required>
+            <button type="submit" class="xl-btn xl-up">📤 読み込む</button>
+        </form>
+    </div>
+    <div class="excel-hint">この月の日程をExcelに書き出して編集し、読み込んで保存できます。新しい月も同じ手順で登録できます。読み込むと確認画面が出て、「保存する」を押すまでデータは変わりません。保存すると、この月の日程はExcelの内容に置き換わり、空白にした行は削除されます。</div>
 </div>
 
 <div class="page-wrap">
